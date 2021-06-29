@@ -4,6 +4,7 @@ import { Note } from "./notes.entity";
 import { NotesRepository } from "./notes.repository";
 import { CreateNoteDto } from "./dto/create-note.dto";
 import { GetNotesFilterDto } from "./dto/get-notes-filter.dto";
+import { User } from "../auth/users.entity";
 
 @Injectable()
 export class NotesService {
@@ -11,12 +12,12 @@ export class NotesService {
     @InjectRepository(NotesRepository) private notesRepository: NotesRepository,
   ) {}
 
-  getNotes(filterDto: GetNotesFilterDto): Promise<Note[]> {
-    return this.notesRepository.getNotes(filterDto);
+  getNotes(filterDto: GetNotesFilterDto, user: User): Promise<Note[]> {
+    return this.notesRepository.getNotes(filterDto, user);
   }
 
-  async getNoteById(id: string): Promise<Note> {
-    const found = await this.notesRepository.findOne(id);
+  async getNoteById(id: string, user: User): Promise<Note> {
+    const found = await this.notesRepository.findOne({ id, user });
 
     if (!found) {
       throw new NotFoundException(`Task with id ${id} not found`);
@@ -25,21 +26,21 @@ export class NotesService {
     return found;
   }
 
-  createNote(createNoteDto: CreateNoteDto): Promise<Note> {
-    return this.notesRepository.createNote(createNoteDto);
+  createNote(createNoteDto: CreateNoteDto, user: User): Promise<Note> {
+    return this.notesRepository.createNote(createNoteDto, user);
   }
 
-  async deleteNote(id: string): Promise<void> {
-    const results = await this.notesRepository.delete(id);
+  async deleteNote(id: string, user: User): Promise<void> {
+    const results = await this.notesRepository.delete({ id, user });
 
     if (results.affected === 0) {
       throw new NotFoundException(`Task with ID ${id} not found`);
     }
   }
 
-  async updateNote(id: string, updateNoteDto: CreateNoteDto) {
+  async updateNote(id: string, updateNoteDto: CreateNoteDto, user: User) {
     const { title, content } = updateNoteDto;
-    const note = await this.getNoteById(id);
+    const note = await this.getNoteById(id, user);
 
     note.title = title;
     note.content = content;
