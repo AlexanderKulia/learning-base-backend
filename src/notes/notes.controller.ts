@@ -8,6 +8,7 @@ import {
   Patch,
   Query,
   UseGuards,
+  Logger,
 } from "@nestjs/common";
 import { NotesService } from "./notes.service";
 import { Note } from "./notes.entity";
@@ -20,6 +21,8 @@ import { GetUser } from "src/auth/get-user.decorator";
 @Controller("notes")
 @UseGuards(AuthGuard())
 export class NotesController {
+  private logger = new Logger();
+
   constructor(private notesService: NotesService) {}
 
   @Get()
@@ -27,6 +30,11 @@ export class NotesController {
     @Query() filterDto: GetNotesFilterDto,
     @GetUser() user: User,
   ): Promise<Note[]> {
+    this.logger.verbose(
+      `User "${user.username}" retrieving all tasks. Filters: ${JSON.stringify(
+        filterDto,
+      )}`,
+    );
     return this.notesService.getNotes(filterDto, user);
   }
 
@@ -40,6 +48,11 @@ export class NotesController {
     @Body() createNoteDto: CreateNoteDto,
     @GetUser() user: User,
   ): Promise<Note> {
+    this.logger.verbose(
+      `User "${user.username} creating a new task. Data ${JSON.stringify(
+        createNoteDto,
+      )}"`,
+    );
     return this.notesService.createNote(createNoteDto, user);
   }
 

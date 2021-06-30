@@ -3,9 +3,12 @@ import { Note } from "./notes.entity";
 import { CreateNoteDto } from "./dto/create-note.dto";
 import { GetNotesFilterDto } from "./dto/get-notes-filter.dto";
 import { User } from "../auth/users.entity";
+import { InternalServerErrorException, Logger } from "@nestjs/common";
 
 @EntityRepository(Note)
 export class NotesRepository extends Repository<Note> {
+  private logger = new Logger("NotesRepository");
+
   async getNotes(filterDto: GetNotesFilterDto, user: User): Promise<Note[]> {
     const { search } = filterDto;
 
@@ -18,8 +21,18 @@ export class NotesRepository extends Repository<Note> {
       );
     }
 
-    const notes = await query.getMany();
-    return notes;
+    try {
+      const notes = await query.getMany();
+      return notes;
+    } catch (error) {
+      this.logger.error(
+        `Failed to get tasks for user "${
+          user.username
+        }". Filters: ${JSON.stringify(filterDto)}`,
+        error.stack,
+      );
+      throw new InternalServerErrorException();
+    }
   }
 
   async createNote(createNoteDto: CreateNoteDto, user: User): Promise<Note> {
