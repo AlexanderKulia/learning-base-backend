@@ -3,11 +3,14 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinTable,
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
 import { Exclude } from "class-transformer";
+import { ManyToMany } from "typeorm";
+import { Tag } from "../tags/tags.entity";
 
 @Entity()
 export class Note {
@@ -29,4 +32,8 @@ export class Note {
   @ManyToOne(() => User, (user) => user.notes, { eager: false })
   @Exclude({ toPlainOnly: true })
   user: User;
+
+  @ManyToMany(() => Tag, { cascade: true })
+  @JoinTable()
+  tags: Tag[];
 }

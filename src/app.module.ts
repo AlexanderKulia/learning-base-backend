@@ -9,7 +9,7 @@ import { configValidationSchema } from "./config.schema";
 @Module({
   imports: [
     ConfigModule.forRoot({
-      envFilePath: [`.env.stage.${process.env.STAGE}`],
+      envFilePath: [`.env.${process.env.STAGE}`],
       validationSchema: configValidationSchema,
     }),
     TypeOrmModule.forRootAsync({
