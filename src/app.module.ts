@@ -25,7 +25,7 @@ import { configValidationSchema } from "./config.schema";
           autoLoadEntities: true,
           synchronize: true,
           port: configService.get("DB_PORT"),
-          host: process.env.WSL_WINDOWS_HOST,
+          host: configService.get("DB_HOST"),
           username: configService.get("DB_USERNAME"),
           password: configService.get("DB_PASSWORD"),
           database: configService.get("DB_DATABASE"),
