@@ -9,7 +9,7 @@ import { configValidationSchema } from "./config.schema";
 @Module({
   imports: [
     ConfigModule.forRoot({
-      envFilePath: [`.env.${process.env.STAGE}`],
+      envFilePath: [`.env`],
       validationSchema: configValidationSchema,
     }),
     TypeOrmModule.forRootAsync({
@@ -25,7 +25,9 @@ import { configValidationSchema } from "./config.schema";
           autoLoadEntities: true,
           synchronize: true,
           port: configService.get("DB_PORT"),
-          host: configService.get("DB_HOST"),
+          host: isProduction
+            ? configService.get("DB_HOST")
+            : process.env.WSL_WINDOWS_HOST,
           username: configService.get("DB_USERNAME"),
           password: configService.get("DB_PASSWORD"),
           database: configService.get("DB_DATABASE"),

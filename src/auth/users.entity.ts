@@ -4,7 +4,7 @@ import { Note } from "../notes/notes.entity";
 @Entity()
 export class User {
   @PrimaryGeneratedColumn()
-  id: string;
+  id: number;
 
   @Column({ unique: true })
   username: string;

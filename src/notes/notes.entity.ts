@@ -15,7 +15,7 @@ import { Tag } from "../tags/tags.entity";
 @Entity()
 export class Note {
   @PrimaryGeneratedColumn()
-  id: string;
+  id: number;
 
   @Column()
   title: string;

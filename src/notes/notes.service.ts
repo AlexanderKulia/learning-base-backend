@@ -16,7 +16,7 @@ export class NotesService {
     return this.notesRepository.getNotes(filterDto, user);
   }
 
-  async getNoteById(id: string, user: User): Promise<Note> {
+  async getNoteById(id: number, user: User): Promise<Note> {
     const found = await this.notesRepository.findOne({ id, user });
 
     if (!found) {
@@ -30,7 +30,7 @@ export class NotesService {
     return this.notesRepository.createNote(createNoteDto, user);
   }
 
-  async deleteNote(id: string, user: User): Promise<void> {
+  async deleteNote(id: number, user: User): Promise<void> {
     const results = await this.notesRepository.delete({ id, user });
 
     if (results.affected === 0) {
@@ -38,7 +38,7 @@ export class NotesService {
     }
   }
 
-  async updateNote(id: string, updateNoteDto: CreateNoteDto, user: User) {
+  async updateNote(id: number, updateNoteDto: CreateNoteDto, user: User) {
     const { title, content } = updateNoteDto;
     const note = await this.getNoteById(id, user);
 

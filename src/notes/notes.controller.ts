@@ -9,6 +9,7 @@ import {
   Query,
   UseGuards,
   Logger,
+  ParseIntPipe,
 } from "@nestjs/common";
 import { NotesService } from "./notes.service";
 import { Note } from "./notes.entity";
@@ -16,7 +17,7 @@ import { CreateNoteDto } from "./dto/create-note.dto";
 import { GetNotesFilterDto } from "./dto/get-notes-filter.dto";
 import { AuthGuard } from "@nestjs/passport";
 import { User } from "../auth/users.entity";
-import { GetUser } from "src/auth/get-user.decorator";
+import { GetUser } from "../auth/get-user.decorator";
 
 @Controller("notes")
 @UseGuards(AuthGuard())
@@ -39,7 +40,10 @@ export class NotesController {
   }
 
   @Get("/:id")
-  getNoteById(@Param("id") id: string, @GetUser() user: User): Promise<Note> {
+  getNoteById(
+    @Param("id", ParseIntPipe) id: number,
+    @GetUser() user: User,
+  ): Promise<Note> {
     return this.notesService.getNoteById(id, user);
   }
 
@@ -57,13 +61,16 @@ export class NotesController {
   }
 
   @Delete("/:id")
-  deleteNote(@Param("id") id: string, @GetUser() user: User): Promise<void> {
+  deleteNote(
+    @Param("id", ParseIntPipe) id: number,
+    @GetUser() user: User,
+  ): Promise<void> {
     return this.notesService.deleteNote(id, user);
   }
 
   @Patch("/:id")
   updateNote(
-    @Param("id") id: string,
+    @Param("id", ParseIntPipe) id: number,
     @Body() updateNoteDto: CreateNoteDto,
     @GetUser() user: User,
   ): Promise<Note> {
