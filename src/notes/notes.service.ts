@@ -31,25 +31,23 @@ export class NotesService {
   async createNote(createNoteDto: CreateNoteDto, user: User): Promise<Note> {
     const { title, content, tags } = createNoteDto;
 
-    const tagsToSave = [];
-    for (const tag of tags) {
-      const found = await this.tagsRepository.findOne({ title: tag });
-
-      if (!found) {
-        const newTag = this.tagsRepository.create({ title: tag });
-        await this.tagsRepository.save(newTag);
-        tagsToSave.push(newTag);
-      } else {
-        tagsToSave.push(found);
-      }
-    }
-
     const note = this.notesRepository.create({
       title,
       content,
       user,
-      tags: tagsToSave,
     });
+
+    for (const tag of tags) {
+      const found = await this.tagsRepository.findOne({ title: tag });
+
+      found
+        ? note.tags.push(found)
+        : note.tags.push(
+            await this.tagsRepository.save(
+              this.tagsRepository.create({ title: tag }),
+            ),
+          );
+    }
 
     return this.notesRepository.createNote(note);
   }
