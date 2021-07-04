@@ -4,10 +4,15 @@ import { NotesController } from "./notes.controller";
 import { NotesRepository } from "./notes.repository";
 import { NotesService } from "./notes.service";
 import { AuthModule } from "../auth/auth.module";
-import { Tag } from "../tags/tags.entity";
+import { TagsModule } from "src/tags/tags.module";
+import { TagsRepository } from "../tags/tags.repository";
 
 @Module({
-  imports: [TypeOrmModule.forFeature([NotesRepository, Tag]), AuthModule],
+  imports: [
+    TypeOrmModule.forFeature([NotesRepository, TagsRepository]),
+    AuthModule,
+    TagsModule,
+  ],
   controllers: [NotesController],
   providers: [NotesService],
 })

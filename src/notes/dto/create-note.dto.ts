@@ -1,4 +1,4 @@
-import { IsNotEmpty } from "class-validator";
+import { IsNotEmpty, MaxLength } from "class-validator";
 
 export class CreateNoteDto {
   @IsNotEmpty()
@@ -6,4 +6,9 @@ export class CreateNoteDto {
 
   @IsNotEmpty()
   content: string;
+
+  @MaxLength(20, {
+    each: true,
+  })
+  tags: string[];
 }

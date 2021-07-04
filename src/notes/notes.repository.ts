@@ -21,6 +21,8 @@ export class NotesRepository extends Repository<Note> {
       );
     }
 
+    query.leftJoinAndSelect("note.tags", "tag");
+
     try {
       const notes = await query.getMany();
       return notes;
@@ -35,15 +37,7 @@ export class NotesRepository extends Repository<Note> {
     }
   }
 
-  async createNote(createNoteDto: CreateNoteDto, user: User): Promise<Note> {
-    const { title, content } = createNoteDto;
-
-    const note = this.create({
-      title,
-      content,
-      user,
-    });
-
+  async createNote(note: Note): Promise<Note> {
     await this.save(note);
     return note;
   }

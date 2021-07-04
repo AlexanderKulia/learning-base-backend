@@ -5,11 +5,13 @@ import { NotesRepository } from "./notes.repository";
 import { CreateNoteDto } from "./dto/create-note.dto";
 import { GetNotesFilterDto } from "./dto/get-notes-filter.dto";
 import { User } from "../auth/users.entity";
+import { TagsRepository } from "../tags/tags.repository";
 
 @Injectable()
 export class NotesService {
   constructor(
     @InjectRepository(NotesRepository) private notesRepository: NotesRepository,
+    @InjectRepository(TagsRepository) private tagsRepository: NotesRepository,
   ) {}
 
   getNotes(filterDto: GetNotesFilterDto, user: User): Promise<Note[]> {
@@ -26,8 +28,30 @@ export class NotesService {
     return found;
   }
 
-  createNote(createNoteDto: CreateNoteDto, user: User): Promise<Note> {
-    return this.notesRepository.createNote(createNoteDto, user);
+  async createNote(createNoteDto: CreateNoteDto, user: User): Promise<Note> {
+    const { title, content, tags } = createNoteDto;
+
+    const tagsToSave = [];
+    for (const tag of tags) {
+      const found = await this.tagsRepository.findOne({ title: tag });
+
+      if (!found) {
+        const newTag = this.tagsRepository.create({ title: tag });
+        await this.tagsRepository.save(newTag);
+        tagsToSave.push(newTag);
+      } else {
+        tagsToSave.push(found);
+      }
+    }
+
+    const note = this.notesRepository.create({
+      title,
+      content,
+      user,
+      tags: tagsToSave,
+    });
+
+    return this.notesRepository.createNote(note);
   }
 
   async deleteNote(id: number, user: User): Promise<void> {

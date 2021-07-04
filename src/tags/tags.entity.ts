@@ -5,6 +5,6 @@ export class Tag {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ unique: true })
   title: string;
 }

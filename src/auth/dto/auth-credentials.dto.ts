@@ -2,7 +2,7 @@ import { IsString, Length, Matches } from "class-validator";
 
 export class AuthCredentialsDto {
   @IsString()
-  @Length(4, 20)
+  @Length(3, 20)
   username: string;
 
   @IsString()
