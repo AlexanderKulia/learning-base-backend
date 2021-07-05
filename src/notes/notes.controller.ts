@@ -18,7 +18,9 @@ import { GetNotesFilterDto } from "./dto/get-notes-filter.dto";
 import { AuthGuard } from "@nestjs/passport";
 import { User } from "../auth/users.entity";
 import { GetUser } from "../auth/get-user.decorator";
+import { ApiBearerAuth } from "@nestjs/swagger";
 
+@ApiBearerAuth()
 @Controller("notes")
 @UseGuards(AuthGuard())
 export class NotesController {
@@ -32,7 +34,7 @@ export class NotesController {
     @GetUser() user: User,
   ): Promise<Note[]> {
     this.logger.verbose(
-      `User "${user.username}" retrieving all tasks. Filters: ${JSON.stringify(
+      `User "${user.email}" retrieving all tasks. Filters: ${JSON.stringify(
         filterDto,
       )}`,
     );
@@ -53,7 +55,7 @@ export class NotesController {
     @GetUser() user: User,
   ): Promise<Note> {
     this.logger.verbose(
-      `User "${user.username} creating a new task. Data ${JSON.stringify(
+      `User "${user.email} creating a new task. Data ${JSON.stringify(
         createNoteDto,
       )}"`,
     );

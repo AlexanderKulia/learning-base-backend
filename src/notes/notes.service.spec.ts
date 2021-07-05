@@ -11,7 +11,7 @@ const mockNotesRepository = () => ({
 });
 
 const mockUser: User = {
-  username: "alex",
+  email: "alex",
   id: 1,
   password: "123",
   notes: [],

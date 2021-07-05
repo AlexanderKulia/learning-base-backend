@@ -29,7 +29,7 @@ export class NotesRepository extends Repository<Note> {
     } catch (error) {
       this.logger.error(
         `Failed to get tasks for user "${
-          user.username
+          user.email
         }". Filters: ${JSON.stringify(filterDto)}`,
         error.stack,
       );
