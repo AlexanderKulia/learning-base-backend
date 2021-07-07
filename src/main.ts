@@ -1,12 +1,14 @@
 import { ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
+import cookieParser from "cookie-parser";
 import { AppModule } from "./app.module";
 import { TransformInterceptor } from "./transform.interceptor";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors();
+  app.use(cookieParser());
 
   const config = new DocumentBuilder()
     .setTitle("Learning Base")

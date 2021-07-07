@@ -1,6 +1,7 @@
-import { Body, Controller, Post } from "@nestjs/common";
+import { Body, Controller, Post, Req, Res } from "@nestjs/common";
 import { AuthCredentialsDto } from "./dto/auth-credentials.dto";
 import { AuthService } from "./auth.service";
+import { Request, Response } from "express";
 
 @Controller("auth")
 export class AuthController {
@@ -14,9 +15,28 @@ export class AuthController {
   }
 
   @Post("/signin")
-  signIn(
+  async signIn(
     @Body() authCredentialsDto: AuthCredentialsDto,
+    @Res({ passthrough: true }) res: Response,
   ): Promise<{ accessToken: string }> {
-    return this.authService.signIn(authCredentialsDto);
+    const { accessToken, refreshToken } = await this.authService.signIn(
+      authCredentialsDto,
+    );
+    res.cookie("jid", refreshToken, { httpOnly: true });
+
+    return { accessToken };
+  }
+
+  @Post("/refresh_token")
+  async refreshJwtToken(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const refreshToken = req.cookies.jid;
+    const { newAccessToken, newRefreshToken } =
+      await this.authService.refreshJwtToken(refreshToken);
+    res.cookie("jid", newRefreshToken, { httpOnly: true });
+
+    return { accessToken: newAccessToken };
   }
 }
