@@ -10,12 +10,14 @@ import * as bcrypt from "bcrypt";
 import { JwtService } from "@nestjs/jwt";
 import { JwtAccessPayload, JwtRefreshPayload } from "./jwt.interface";
 import { User } from "./users.entity";
+import { ConfigService } from "@nestjs/config";
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(UsersRepository) private usersRepository: UsersRepository,
     private jwtService: JwtService,
+    private configService: ConfigService,
   ) {}
 
   signUp(authCredentialsDto: AuthCredentialsDto): Promise<{ message: string }> {
@@ -73,7 +75,7 @@ export class AuthService {
       tokenVersion: user.tokenVersion,
     };
     return this.jwtService.sign(payload, {
-      secret: process.env.JWT_REFRESH_SECRET,
+      secret: this.configService.get("JWT_REFRESH_SECRET"),
     });
   }
 
@@ -81,7 +83,7 @@ export class AuthService {
     let payload = null;
     try {
       payload = this.jwtService.verify(refreshToken, {
-        secret: process.env.JWT_REFRESH_SECRET,
+        secret: this.configService.get("JWT_REFRESH_SECRET"),
       });
     } catch (error) {
       throw new UnauthorizedException("Token is malformed");
