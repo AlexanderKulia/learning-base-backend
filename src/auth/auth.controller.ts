@@ -42,7 +42,11 @@ export class AuthController {
 
   @Get("/logout")
   logout(@Res({ passthrough: true }) res: Response) {
-    res.clearCookie("jid");
+    res.cookie("jid", "asd", {
+      httpOnly: true,
+      maxAge: 0,
+      expires: new Date(),
+    });
     return true;
   }
 }
