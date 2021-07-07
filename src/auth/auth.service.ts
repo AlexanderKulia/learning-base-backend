@@ -39,7 +39,7 @@ export class AuthService {
     }
   }
 
-  async refreshJwtToken(
+  async refreshTokens(
     refreshToken: string,
   ): Promise<{ newAccessToken: string; newRefreshToken: string }> {
     if (!refreshToken) {
@@ -62,13 +62,13 @@ export class AuthService {
     return { newAccessToken, newRefreshToken };
   }
 
-  createNewAccessToken(user: User) {
+  createNewAccessToken(user: User): string {
     const { id, email } = user;
     const payload: JwtAccessPayload = { sub: id, email };
     return this.jwtService.sign(payload);
   }
 
-  createNewRefreshToken(user: User) {
+  createNewRefreshToken(user: User): string {
     const { id } = user;
     const payload: JwtRefreshPayload = {
       sub: id,
@@ -79,7 +79,7 @@ export class AuthService {
     });
   }
 
-  verifyRefreshToken(refreshToken: string) {
+  verifyRefreshToken(refreshToken: string): JwtRefreshPayload {
     let payload = null;
     try {
       payload = this.jwtService.verify(refreshToken, {
@@ -91,8 +91,19 @@ export class AuthService {
     return payload;
   }
 
-  async revokeRefreshTokensForUser(userId: number) {
+  async revokeRefreshTokensForUser(userId: number): Promise<boolean> {
     await this.usersRepository.increment({ id: userId }, "tokenVersion", 1);
     return true;
+  }
+
+  verifyCurrentUser(refreshToken: string): boolean {
+    try {
+      this.jwtService.verify(refreshToken, {
+        secret: this.configService.get("JWT_REFRESH_SECRET"),
+      });
+      return true;
+    } catch (error) {
+      return false;
+    }
   }
 }

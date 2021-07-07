@@ -28,13 +28,13 @@ export class AuthController {
   }
 
   @Post("/refresh_token")
-  async refreshJwtToken(
+  async refreshTokens(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
     const refreshToken = req.cookies.jid;
     const { newAccessToken, newRefreshToken } =
-      await this.authService.refreshJwtToken(refreshToken);
+      await this.authService.refreshTokens(refreshToken);
     res.cookie("jid", newRefreshToken, { httpOnly: true });
 
     return { accessToken: newAccessToken };
@@ -48,5 +48,11 @@ export class AuthController {
       expires: new Date(),
     });
     return true;
+  }
+
+  @Get("/verify_user")
+  verifyCurrentUser(@Req() req: Request) {
+    const refreshToken = req.cookies.jid;
+    return this.authService.verifyCurrentUser(refreshToken);
   }
 }
