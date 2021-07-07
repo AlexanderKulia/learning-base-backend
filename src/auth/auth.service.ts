@@ -8,7 +8,7 @@ import { UsersRepository } from "./users.repository";
 import { AuthCredentialsDto } from "./dto/auth-credentials.dto";
 import * as bcrypt from "bcrypt";
 import { JwtService } from "@nestjs/jwt";
-import { JwtAccessPayload, JwtRefreshPayload } from "./jwt.interface";
+import { AccessTokenPayload, RefreshTokenPayload } from "./jwt.interface";
 import { User } from "./users.entity";
 import { ConfigService } from "@nestjs/config";
 
@@ -64,13 +64,13 @@ export class AuthService {
 
   createNewAccessToken(user: User): string {
     const { id, email } = user;
-    const payload: JwtAccessPayload = { sub: id, email };
+    const payload: AccessTokenPayload = { sub: id, email };
     return this.jwtService.sign(payload);
   }
 
   createNewRefreshToken(user: User): string {
     const { id } = user;
-    const payload: JwtRefreshPayload = {
+    const payload: RefreshTokenPayload = {
       sub: id,
       tokenVersion: user.tokenVersion,
     };
@@ -79,7 +79,7 @@ export class AuthService {
     });
   }
 
-  verifyRefreshToken(refreshToken: string): JwtRefreshPayload {
+  verifyRefreshToken(refreshToken: string): RefreshTokenPayload {
     let payload = null;
     try {
       payload = this.jwtService.verify(refreshToken, {
