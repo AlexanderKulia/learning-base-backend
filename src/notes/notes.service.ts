@@ -35,6 +35,7 @@ export class NotesService {
       title,
       content,
       user,
+      tags: [],
     });
 
     for (const tag of tags) {
