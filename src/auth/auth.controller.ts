@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req, Res } from "@nestjs/common";
+import { Body, Controller, Get, Post, Req, Res } from "@nestjs/common";
 import { AuthCredentialsDto } from "./dto/auth-credentials.dto";
 import { AuthService } from "./auth.service";
 import { Request, Response } from "express";
@@ -38,5 +38,11 @@ export class AuthController {
     res.cookie("jid", newRefreshToken, { httpOnly: true });
 
     return { accessToken: newAccessToken };
+  }
+
+  @Get("/logout")
+  logout(@Res({ passthrough: true }) res: Response) {
+    res.clearCookie("jid");
+    return true;
   }
 }
