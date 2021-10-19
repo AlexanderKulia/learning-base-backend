@@ -6,6 +6,7 @@ import { CreateNoteDto } from "./dto/create-note.dto";
 import { GetNotesFilterDto } from "./dto/get-notes-filter.dto";
 import { User } from "../auth/users.entity";
 import { TagsRepository } from "../tags/tags.repository";
+import { Tag } from "src/tags/tags.entity";
 
 @Injectable()
 export class NotesService {
@@ -22,7 +23,7 @@ export class NotesService {
     const found = await this.notesRepository.findOne({ id, user });
 
     if (!found) {
-      throw new NotFoundException(`Task with id ${id} not found`);
+      throw new NotFoundException(`Note with id ${id} not found`);
     }
 
     return found;
@@ -35,20 +36,8 @@ export class NotesService {
       title,
       content,
       user,
-      tags: [],
+      tags: await this.parseTags(tags, user),
     });
-
-    for (const tag of tags) {
-      const found = await this.tagsRepository.findOne({ title: tag });
-
-      found
-        ? note.tags.push(found)
-        : note.tags.push(
-            await this.tagsRepository.save(
-              this.tagsRepository.create({ title: tag }),
-            ),
-          );
-    }
 
     return this.notesRepository.createNote(note);
   }
@@ -57,18 +46,36 @@ export class NotesService {
     const results = await this.notesRepository.delete({ id, user });
 
     if (results.affected === 0) {
-      throw new NotFoundException(`Task with ID ${id} not found`);
+      throw new NotFoundException(`Note with id ${id} not found`);
     }
   }
 
   async updateNote(id: number, updateNoteDto: CreateNoteDto, user: User) {
-    const { title, content } = updateNoteDto;
+    const { title, content, tags } = updateNoteDto;
     const note = await this.getNoteById(id, user);
 
     note.title = title;
     note.content = content;
+    note.tags = await this.parseTags(tags, user);
     await this.notesRepository.save(note);
 
     return note;
+  }
+
+  async parseTags(tags: string[], user: User): Promise<Tag[]> {
+    const parsedTags = [];
+
+    for (const tag of tags) {
+      const found = await this.tagsRepository.findOne({ title: tag, user });
+
+      found
+        ? parsedTags.push(found)
+        : parsedTags.push(
+            await this.tagsRepository.save(
+              this.tagsRepository.create({ title: tag, user }),
+            ),
+          );
+    }
+    return parsedTags;
   }
 }

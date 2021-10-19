@@ -34,7 +34,7 @@ export class NotesController {
     @GetUser() user: User,
   ): Promise<Note[]> {
     this.logger.verbose(
-      `User "${user.email}" retrieving all tasks. Filters: ${JSON.stringify(
+      `User ${user.email} retrieving all notes. Filters: ${JSON.stringify(
         filterDto,
       )}`,
     );
@@ -46,6 +46,7 @@ export class NotesController {
     @Param("id", ParseIntPipe) id: number,
     @GetUser() user: User,
   ): Promise<Note> {
+    this.logger.verbose(`User ${user.email} getting noteId ${id}`);
     return this.notesService.getNoteById(id, user);
   }
 
@@ -55,7 +56,7 @@ export class NotesController {
     @GetUser() user: User,
   ): Promise<Note> {
     this.logger.verbose(
-      `User "${user.email} creating a new task. Data ${JSON.stringify(
+      `User ${user.email} creating a new note. Data ${JSON.stringify(
         createNoteDto,
       )}"`,
     );
@@ -67,6 +68,7 @@ export class NotesController {
     @Param("id", ParseIntPipe) id: number,
     @GetUser() user: User,
   ): Promise<void> {
+    this.logger.verbose(`User ${user.email} deleting noteId ${id}`);
     return this.notesService.deleteNote(id, user);
   }
 
@@ -76,6 +78,7 @@ export class NotesController {
     @Body() updateNoteDto: CreateNoteDto,
     @GetUser() user: User,
   ): Promise<Note> {
+    this.logger.verbose(`User ${user.email} updating noteId ${id}`);
     return this.notesService.updateNote(id, updateNoteDto, user);
   }
 }

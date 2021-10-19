@@ -33,7 +33,7 @@ export class Note {
   @Exclude({ toPlainOnly: true })
   user: User;
 
-  @ManyToMany(() => Tag, { cascade: true })
+  @ManyToMany(() => Tag, { eager: true, cascade: true })
   @JoinTable()
   tags: Tag[];
 }
