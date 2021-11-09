@@ -1,19 +1,13 @@
 import { Module } from "@nestjs/common";
-import { TypeOrmModule } from "@nestjs/typeorm";
 import { NotesController } from "./notes.controller";
-import { NotesRepository } from "./notes.repository";
 import { NotesService } from "./notes.service";
 import { AuthModule } from "../auth/auth.module";
 import { TagsModule } from "src/tags/tags.module";
-import { TagsRepository } from "../tags/tags.repository";
+import { PrismaService } from "../prisma/prisma.service";
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([NotesRepository, TagsRepository]),
-    AuthModule,
-    TagsModule,
-  ],
+  imports: [AuthModule, TagsModule],
   controllers: [NotesController],
-  providers: [NotesService],
+  providers: [NotesService, PrismaService],
 })
 export class NotesModule {}

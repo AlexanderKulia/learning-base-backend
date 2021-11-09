@@ -1,34 +1,52 @@
 import {
+  ConflictException,
   Injectable,
   InternalServerErrorException,
   UnauthorizedException,
 } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
-import { UsersRepository } from "./users.repository";
 import { AuthCredentialsDto } from "./dto/auth-credentials.dto";
 import * as bcrypt from "bcrypt";
 import { JwtService } from "@nestjs/jwt";
 import { AccessTokenPayload, RefreshTokenPayload } from "./jwt.interface";
-import { User } from "./users.entity";
+import { User } from "@prisma/client";
 import { ConfigService } from "@nestjs/config";
+import { PrismaService } from "../prisma/prisma.service";
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectRepository(UsersRepository) private usersRepository: UsersRepository,
+    private prisma: PrismaService,
     private jwtService: JwtService,
     private configService: ConfigService,
   ) {}
 
-  signUp(authCredentialsDto: AuthCredentialsDto): Promise<{ message: string }> {
-    return this.usersRepository.createUser(authCredentialsDto);
+  async signUp(
+    authCredentialsDto: AuthCredentialsDto,
+  ): Promise<{ message: string }> {
+    const { email, password } = authCredentialsDto;
+    const salt = await bcrypt.genSalt();
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    try {
+      await this.prisma.user.create({
+        data: { email, password: hashedPassword },
+      });
+      return { message: "User created successfully" };
+    } catch (error) {
+      // duplicate email
+      if (error.code === "23505") {
+        throw new ConflictException("Email already exists");
+      } else {
+        throw new InternalServerErrorException();
+      }
+    }
   }
 
   async signIn(
     authCredentialsDto: AuthCredentialsDto,
   ): Promise<{ accessToken: string; refreshToken: string }> {
     const { email, password } = authCredentialsDto;
-    const user = await this.usersRepository.findOne({ email });
+    const user = await this.prisma.user.findUnique({ where: { email } });
 
     if (user && (await bcrypt.compare(password, user.password))) {
       const accessToken = this.createNewAccessToken(user);
@@ -48,7 +66,9 @@ export class AuthService {
 
     const refreshPayload = this.verifyRefreshToken(refreshToken);
 
-    const user = await this.usersRepository.findOne(refreshPayload.sub);
+    const user = await this.prisma.user.findUnique({
+      where: { id: refreshPayload.sub },
+    });
     if (!user) {
       throw new InternalServerErrorException();
     }
@@ -92,7 +112,12 @@ export class AuthService {
   }
 
   async revokeRefreshTokensForUser(userId: number): Promise<boolean> {
-    await this.usersRepository.increment({ id: userId }, "tokenVersion", 1);
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        tokenVersion: { increment: 1 },
+      },
+    });
     return true;
   }
 

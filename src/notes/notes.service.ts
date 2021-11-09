@@ -1,26 +1,52 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
-import { Note } from "./notes.entity";
-import { NotesRepository } from "./notes.repository";
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+} from "@nestjs/common";
 import { CreateNoteDto } from "./dto/create-note.dto";
 import { GetNotesFilterDto } from "./dto/get-notes-filter.dto";
-import { User } from "../auth/users.entity";
-import { TagsRepository } from "../tags/tags.repository";
-import { Tag } from "src/tags/tags.entity";
+import { User, Tag, Note } from "@prisma/client";
+import { PrismaService } from "../prisma/prisma.service";
 
 @Injectable()
 export class NotesService {
   constructor(
-    @InjectRepository(NotesRepository) private notesRepository: NotesRepository,
-    @InjectRepository(TagsRepository) private tagsRepository: NotesRepository,
+    private logger = new Logger("NotesService"),
+    private prisma: PrismaService,
   ) {}
 
-  getNotes(filterDto: GetNotesFilterDto, user: User): Promise<Note[]> {
-    return this.notesRepository.getNotes(filterDto, user);
+  async getNotes(filterDto: GetNotesFilterDto, user: User): Promise<Note[]> {
+    const { search } = filterDto;
+
+    try {
+      return await this.prisma.note.findMany({
+        where: {
+          user,
+          OR: [
+            { title: { contains: search } },
+            { content: { contains: search } },
+          ],
+        },
+        include: { tags: true },
+        orderBy: { updatedAt: "desc" },
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to get tasks for user "${
+          user.email
+        }". Filters: ${JSON.stringify(filterDto)}`,
+        error.stack,
+      );
+      throw new InternalServerErrorException();
+    }
   }
 
-  async getNoteById(id: number, user: User): Promise<Note> {
-    const found = await this.notesRepository.findOne({ id, user });
+  async getNoteById(id: number): Promise<Note> {
+    const found = await this.prisma.note.findUnique({
+      where: { id },
+      include: { tags: true },
+    });
 
     if (!found) {
       throw new NotFoundException(`Note with id ${id} not found`);
@@ -31,49 +57,54 @@ export class NotesService {
 
   async createNote(createNoteDto: CreateNoteDto, user: User): Promise<Note> {
     const { title, content, tags } = createNoteDto;
+    const parsedTags = await this.parseTags(tags, user);
 
-    const note = this.notesRepository.create({
-      title,
-      content,
-      user,
-      tags: await this.parseTags(tags, user),
+    return await this.prisma.note.create({
+      data: {
+        title,
+        content,
+        user: { connect: { id: user.id } },
+        tags: { create: parsedTags },
+      },
     });
-
-    return this.notesRepository.createNote(note);
   }
 
-  async deleteNote(id: number, user: User): Promise<void> {
-    const results = await this.notesRepository.delete({ id, user });
-
-    if (results.affected === 0) {
-      throw new NotFoundException(`Note with id ${id} not found`);
+  async deleteNote(id: number): Promise<void> {
+    try {
+      await this.prisma.note.delete({ where: { id } });
+    } catch (error) {
+      throw new NotFoundException(`Could not delete noteId ${id}`);
     }
   }
 
   async updateNote(id: number, updateNoteDto: CreateNoteDto, user: User) {
     const { title, content, tags } = updateNoteDto;
-    const note = await this.getNoteById(id, user);
+    const parsedTags = await this.parseTags(tags, user);
 
-    note.title = title;
-    note.content = content;
-    note.tags = await this.parseTags(tags, user);
-    await this.notesRepository.save(note);
-
-    return note;
+    return await this.prisma.note.update({
+      where: { id },
+      data: {
+        title,
+        content,
+        tags: { connect: parsedTags.map((tag) => ({ id: tag.id })) },
+      },
+    });
   }
 
   async parseTags(tags: string[], user: User): Promise<Tag[]> {
     const parsedTags = [];
 
     for (const tag of tags) {
-      const found = await this.tagsRepository.findOne({ title: tag, user });
+      const found = await this.prisma.tag.findUnique({
+        where: { title_userId: { title: tag, userId: user.id } },
+      });
 
       found
         ? parsedTags.push(found)
         : parsedTags.push(
-            await this.tagsRepository.save(
-              this.tagsRepository.create({ title: tag, user }),
-            ),
+            await this.prisma.tag.create({
+              data: { title: tag, user: { connect: { id: user.id } } },
+            }),
           );
     }
     return parsedTags;

@@ -2,9 +2,10 @@ import { ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import cookieParser from "cookie-parser";
-import { AppModule } from "./app.module";
 import { TransformInterceptor } from "./transform.interceptor";
 import { ConfigService } from "@nestjs/config";
+import { PrismaService } from "./prisma/prisma.service";
+import { AppModule } from "./app.module";
 
 async function bootstrap() {
   const configService = new ConfigService();
@@ -15,6 +16,8 @@ async function bootstrap() {
     origin: configService.get("FRONTEND_URL"),
   });
   app.use(cookieParser());
+  const prismaService: PrismaService = app.get(PrismaService);
+  prismaService.enableShutdownHooks(app);
 
   const config = new DocumentBuilder()
     .setTitle("Learning Base")

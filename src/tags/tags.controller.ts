@@ -13,8 +13,7 @@ import {
 import { ApiBearerAuth } from "@nestjs/swagger";
 import { AuthGuard } from "@nestjs/passport";
 import { TagsService } from "./tags.service";
-import { Tag } from "./tags.entity";
-import { User } from "src/auth/users.entity";
+import { Tag, User } from "@prisma/client";
 import { GetUser } from "src/auth/get-user.decorator";
 import { CreateTagDto } from "./dto/create-tag.dto";
 
@@ -32,12 +31,12 @@ export class TagsController {
   }
 
   @Get("/:id")
-  getNoteById(
+  getTagById(
     @Param("id", ParseIntPipe) id: number,
     @GetUser() user: User,
   ): Promise<Tag> {
     this.logger.verbose(`User ${user.email} getting tagId ${id}`);
-    return this.tagsService.getTagById(id, user);
+    return this.tagsService.getTagById(id);
   }
 
   @Post()
@@ -47,7 +46,7 @@ export class TagsController {
         createTagDto,
       )}`,
     );
-    return this.tagsService.createTag(createTagDto);
+    return this.tagsService.createTag(createTagDto, user);
   }
 
   @Delete("/:id")
@@ -56,7 +55,7 @@ export class TagsController {
     @GetUser() user: User,
   ): Promise<void> {
     this.logger.verbose(`User ${user.email} deleting tagId ${id}`);
-    return this.tagsService.deleteTag(id, user);
+    return this.tagsService.deleteTag(id);
   }
 
   @Patch("/:id")
@@ -66,6 +65,6 @@ export class TagsController {
     @GetUser() user: User,
   ): Promise<Tag> {
     this.logger.verbose(`User ${user.email} updating tagId ${id}`);
-    return this.tagsService.updateTag(id, updateTagDto, user);
+    return this.tagsService.updateTag(id, updateTagDto);
   }
 }
