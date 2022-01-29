@@ -4,13 +4,13 @@ import {
   InternalServerErrorException,
   UnauthorizedException,
 } from "@nestjs/common";
-import { AuthCredentialsDto } from "./dto/auth-credentials.dto";
-import * as bcrypt from "bcrypt";
-import { JwtService } from "@nestjs/jwt";
-import { AccessTokenPayload, RefreshTokenPayload } from "./jwt.interface";
-import { User } from "@prisma/client";
 import { ConfigService } from "@nestjs/config";
-import { PrismaService } from "../prisma/prisma.service";
+import { JwtService } from "@nestjs/jwt";
+import { User } from "@prisma/client";
+import * as bcrypt from "bcrypt";
+import { PrismaService } from "../prisma.service";
+import { AuthCredentialsDto } from "./dto/auth-credentials.dto";
+import { AccessTokenPayload, RefreshTokenPayload } from "./jwt.interface";
 
 @Injectable()
 export class AuthService {

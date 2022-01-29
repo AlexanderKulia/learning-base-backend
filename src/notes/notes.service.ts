@@ -3,18 +3,18 @@ import {
   InternalServerErrorException,
   Logger,
   NotFoundException,
+  UnauthorizedException,
 } from "@nestjs/common";
+import { Note, Tag, User } from "@prisma/client";
+import { PrismaService } from "../prisma.service";
 import { CreateNoteDto } from "./dto/create-note.dto";
 import { GetNotesFilterDto } from "./dto/get-notes-filter.dto";
-import { User, Tag, Note } from "@prisma/client";
-import { PrismaService } from "../prisma/prisma.service";
 
 @Injectable()
 export class NotesService {
-  constructor(
-    private logger = new Logger("NotesService"),
-    private prisma: PrismaService,
-  ) {}
+  private readonly logger = new Logger(NotesService.name);
+
+  constructor(private prisma: PrismaService) {}
 
   async getNotes(filterDto: GetNotesFilterDto, user: User): Promise<Note[]> {
     const { search } = filterDto;
@@ -42,9 +42,9 @@ export class NotesService {
     }
   }
 
-  async getNoteById(id: number): Promise<Note> {
-    const found = await this.prisma.note.findUnique({
-      where: { id },
+  async getNoteById(id: number, user: User): Promise<Note> {
+    const found = await this.prisma.note.findFirst({
+      where: { id, user },
       include: { tags: true },
     });
 
@@ -69,8 +69,15 @@ export class NotesService {
     });
   }
 
-  async deleteNote(id: number): Promise<void> {
+  async deleteNote(id: number, user: User): Promise<void> {
     try {
+      const found = await this.prisma.note.findUnique({ where: { id } });
+
+      if (user.id !== found.userId)
+        throw new UnauthorizedException(
+          `You do not have access to this ressource`,
+        );
+
       await this.prisma.note.delete({ where: { id } });
     } catch (error) {
       throw new NotFoundException(`Could not delete noteId ${id}`);
@@ -78,6 +85,13 @@ export class NotesService {
   }
 
   async updateNote(id: number, updateNoteDto: CreateNoteDto, user: User) {
+    const found = await this.prisma.note.findUnique({ where: { id } });
+
+    if (user.id !== found.userId)
+      throw new UnauthorizedException(
+        `You do not have access to this ressource`,
+      );
+
     const { title, content, tags } = updateNoteDto;
     const parsedTags = await this.parseTags(tags, user);
 

@@ -1,29 +1,29 @@
 import {
-  Controller,
-  Param,
-  Get,
   Body,
-  Post,
+  Controller,
   Delete,
+  Get,
+  Logger,
+  Param,
+  ParseIntPipe,
   Patch,
+  Post,
   Query,
   UseGuards,
-  Logger,
-  ParseIntPipe,
 } from "@nestjs/common";
-import { NotesService } from "./notes.service";
+import { AuthGuard } from "@nestjs/passport";
+import { ApiBearerAuth } from "@nestjs/swagger";
+import { Note, User } from "@prisma/client";
+import { GetUser } from "../auth/get-user.decorator";
 import { CreateNoteDto } from "./dto/create-note.dto";
 import { GetNotesFilterDto } from "./dto/get-notes-filter.dto";
-import { AuthGuard } from "@nestjs/passport";
-import { User, Note } from "@prisma/client";
-import { GetUser } from "../auth/get-user.decorator";
-import { ApiBearerAuth } from "@nestjs/swagger";
+import { NotesService } from "./notes.service";
 
 @ApiBearerAuth()
 @Controller("notes")
 @UseGuards(AuthGuard())
 export class NotesController {
-  private logger = new Logger();
+  private readonly logger = new Logger(NotesController.name);
 
   constructor(private notesService: NotesService) {}
 
@@ -46,7 +46,7 @@ export class NotesController {
     @GetUser() user: User,
   ): Promise<Note> {
     this.logger.verbose(`User ${user.email} getting noteId ${id}`);
-    return this.notesService.getNoteById(id);
+    return this.notesService.getNoteById(id, user);
   }
 
   @Post()
@@ -68,7 +68,7 @@ export class NotesController {
     @GetUser() user: User,
   ): Promise<void> {
     this.logger.verbose(`User ${user.email} deleting noteId ${id}`);
-    return this.notesService.deleteNote(id);
+    return this.notesService.deleteNote(id, user);
   }
 
   @Patch("/:id")

@@ -1,12 +1,13 @@
 import { Module } from "@nestjs/common";
-import { TagsService } from "./tags.service";
+import { ConfigService } from "@nestjs/config";
+import { AuthModule } from "../auth/auth.module";
+import { PrismaService } from "../prisma.service";
 import { TagsController } from "./tags.controller";
-import { AuthModule } from "src/auth/auth.module";
-import { PrismaService } from "../prisma/prisma.service";
+import { TagsService } from "./tags.service";
 
 @Module({
   imports: [AuthModule],
-  providers: [TagsService, PrismaService],
+  providers: [TagsService, PrismaService, ConfigService],
   controllers: [TagsController],
 })
 export class TagsModule {}

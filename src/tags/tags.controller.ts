@@ -1,27 +1,28 @@
 import {
+  Body,
   Controller,
+  Delete,
   Get,
   Logger,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   UseGuards,
-  Body,
-  Delete,
-  Patch,
 } from "@nestjs/common";
-import { ApiBearerAuth } from "@nestjs/swagger";
 import { AuthGuard } from "@nestjs/passport";
-import { TagsService } from "./tags.service";
+import { ApiBearerAuth } from "@nestjs/swagger";
 import { Tag, User } from "@prisma/client";
-import { GetUser } from "src/auth/get-user.decorator";
+import { GetUser } from "../auth/get-user.decorator";
 import { CreateTagDto } from "./dto/create-tag.dto";
+import { TagsService } from "./tags.service";
 
 @ApiBearerAuth()
 @Controller("tags")
 @UseGuards(AuthGuard())
 export class TagsController {
-  private logger = new Logger();
+  private readonly logger = new Logger();
+
   constructor(private tagsService: TagsService) {}
 
   @Get()
