@@ -17,12 +17,16 @@ jobs:
       - run: npm test
   deploy:
     runs-on: ubuntu-latest
+    env:
+      JWT_ACCESS_SECRET: access
+      JWT_REFRESH_SECRET: refresh
     steps:
       - uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}
           script: |
             cd projects/learning-base
             git clone git@github.com:AlexanderKulia/learning-base-backend.git
