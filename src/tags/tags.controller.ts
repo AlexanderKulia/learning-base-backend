@@ -8,6 +8,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from "@nestjs/common";
 import { AuthGuard } from "@nestjs/passport";
@@ -15,6 +16,7 @@ import { ApiBearerAuth } from "@nestjs/swagger";
 import { Tag, User } from "@prisma/client";
 import { GetUser } from "../auth/get-user.decorator";
 import { CreateTagDto } from "./dto/create-tag.dto";
+import { GetTagsFilterDto } from "./dto/get-gets-flter.dto";
 import { TagsService } from "./tags.service";
 
 @ApiBearerAuth()
@@ -26,9 +28,16 @@ export class TagsController {
   constructor(private tagsService: TagsService) {}
 
   @Get()
-  getTags(@GetUser() user: User): Promise<Tag[]> {
-    this.logger.verbose(`User ${user.email} retrieving all tags`);
-    return this.tagsService.getTags(user);
+  getTags(
+    @Query() filterDto: GetTagsFilterDto,
+    @GetUser() user: User,
+  ): Promise<Tag[]> {
+    this.logger.verbose(
+      `User ${user.email} retrieving all tags. Filter: ${JSON.stringify(
+        filterDto,
+      )}`,
+    );
+    return this.tagsService.getTags(filterDto, user);
   }
 
   @Get("/:id")

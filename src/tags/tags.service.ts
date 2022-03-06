@@ -2,14 +2,23 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { Tag, User } from "@prisma/client";
 import { PrismaService } from "../prisma.service";
 import { CreateTagDto } from "./dto/create-tag.dto";
+import { GetTagsFilterDto } from "./dto/get-gets-flter.dto";
 
 @Injectable()
 export class TagsService {
   constructor(private prisma: PrismaService) {}
 
-  async getTags(user: User): Promise<Tag[]> {
+  async getTags(filterDto: GetTagsFilterDto, user: User): Promise<Tag[]> {
+    const { search } = filterDto;
+    const where = search
+      ? {
+          user,
+          title: { contains: search },
+        }
+      : { user };
+
     return await this.prisma.tag.findMany({
-      where: { userId: user.id },
+      where,
       include: {
         _count: {
           select: { notes: true },

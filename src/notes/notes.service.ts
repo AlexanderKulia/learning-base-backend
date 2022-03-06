@@ -5,7 +5,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from "@nestjs/common";
-import { Note, Tag, User } from "@prisma/client";
+import { Note, Prisma, User } from "@prisma/client";
 import { PrismaService } from "../prisma.service";
 import { CreateNoteDto } from "./dto/create-note.dto";
 import { GetNotesFilterDto } from "./dto/get-notes-filter.dto";
@@ -18,16 +18,19 @@ export class NotesService {
 
   async getNotes(filterDto: GetNotesFilterDto, user: User): Promise<Note[]> {
     const { search } = filterDto;
-
-    try {
-      return await this.prisma.note.findMany({
-        where: {
+    const where = search
+      ? {
           user,
           OR: [
             { title: { contains: search } },
             { content: { contains: search } },
           ],
-        },
+        }
+      : { user };
+
+    try {
+      return await this.prisma.note.findMany({
+        where,
         include: { tags: true },
         orderBy: { updatedAt: "desc" },
       });
@@ -57,14 +60,16 @@ export class NotesService {
 
   async createNote(createNoteDto: CreateNoteDto, user: User): Promise<Note> {
     const { title, content, tags } = createNoteDto;
-    const parsedTags = await this.parseTags(tags, user);
+    const parsedTags = this.parseTags(tags, user);
 
     return await this.prisma.note.create({
       data: {
         title,
         content,
         user: { connect: { id: user.id } },
-        tags: { create: parsedTags },
+        tags: {
+          connectOrCreate: parsedTags,
+        },
       },
     });
   }
@@ -85,42 +90,60 @@ export class NotesService {
   }
 
   async updateNote(id: number, updateNoteDto: CreateNoteDto, user: User) {
-    const found = await this.prisma.note.findUnique({ where: { id } });
+    const found = await this.prisma.note.findUnique({
+      where: { id },
+      include: { tags: true },
+    });
 
-    if (user.id !== found.userId)
+    if (user.id !== found?.userId)
       throw new UnauthorizedException(
         `You do not have access to this ressource`,
       );
 
     const { title, content, tags } = updateNoteDto;
-    const parsedTags = await this.parseTags(tags, user);
+
+    //Disconnect old tags if present
+    const tagsToDisconnect = found.tags.filter(
+      (tag) => !tags.includes(tag.title),
+    );
+
+    await this.prisma.note.update({
+      where: { id },
+      data: {
+        tags: {
+          disconnect: tagsToDisconnect.map((tag) => {
+            return { id: tag.id };
+          }),
+        },
+      },
+    });
+
+    const parsedTags = this.parseTags(tags, user);
 
     return await this.prisma.note.update({
       where: { id },
       data: {
         title,
         content,
-        tags: { connect: parsedTags.map((tag) => ({ id: tag.id })) },
+        tags: { connectOrCreate: parsedTags },
       },
     });
   }
 
-  async parseTags(tags: string[], user: User): Promise<Tag[]> {
-    const parsedTags = [];
-
-    for (const tag of tags) {
-      const found = await this.prisma.tag.findUnique({
-        where: { title_userId: { title: tag, userId: user.id } },
-      });
-
-      found
-        ? parsedTags.push(found)
-        : parsedTags.push(
-            await this.prisma.tag.create({
-              data: { title: tag, user: { connect: { id: user.id } } },
-            }),
-          );
-    }
-    return parsedTags;
+  parseTags(
+    tags: string[],
+    user: User,
+  ): Prisma.Enumerable<Prisma.TagCreateOrConnectWithoutNotesInput> {
+    return tags.map((tagTitle) => {
+      return {
+        where: {
+          title_userId: {
+            title: tagTitle,
+            userId: user.id,
+          },
+        },
+        create: { title: tagTitle, userId: user.id },
+      };
+    });
   }
 }
