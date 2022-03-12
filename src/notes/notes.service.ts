@@ -7,6 +7,7 @@ import {
 } from "@nestjs/common";
 import { Note, Prisma, User } from "@prisma/client";
 import { PrismaService } from "../prisma.service";
+import { ApiResponse } from "../types";
 import { CreateNoteDto } from "./dto/create-note.dto";
 import { GetNotesFilterDto } from "./dto/get-notes-filter.dto";
 
@@ -16,24 +17,38 @@ export class NotesService {
 
   constructor(private prisma: PrismaService) {}
 
-  async getNotes(filterDto: GetNotesFilterDto, user: User): Promise<Note[]> {
-    const { search } = filterDto;
-    const where = search
-      ? {
-          user,
-          OR: [
-            { title: { contains: search } },
-            { content: { contains: search } },
-          ],
-        }
-      : { user };
+  async getNotes(
+    filterDto: GetNotesFilterDto,
+    user: User,
+  ): Promise<ApiResponse<Note>> {
+    const { search, tags, page, perPage } = filterDto;
+    const where: Prisma.NoteWhereInput = { user };
+
+    if (search) {
+      where.OR = [
+        { title: { contains: search } },
+        { content: { contains: search } },
+      ];
+    }
+
+    if (tags) {
+      where.tags = { some: { title: { in: tags } } };
+    }
 
     try {
-      return await this.prisma.note.findMany({
+      const itemCount = await this.prisma.note.count({ where });
+      const data = await this.prisma.note.findMany({
         where,
         include: { tags: true },
+        skip: (page - 1) * perPage,
+        take: perPage,
         orderBy: { updatedAt: "desc" },
       });
+
+      return {
+        data,
+        meta: { itemCount, pageCount: Math.ceil(itemCount / perPage) },
+      };
     } catch (error) {
       this.logger.error(
         `Failed to get tasks for user "${

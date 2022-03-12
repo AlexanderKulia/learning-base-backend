@@ -15,6 +15,7 @@ import { AuthGuard } from "@nestjs/passport";
 import { ApiBearerAuth } from "@nestjs/swagger";
 import { Note, User } from "@prisma/client";
 import { GetUser } from "../auth/get-user.decorator";
+import { ApiResponse } from "../types";
 import { CreateNoteDto } from "./dto/create-note.dto";
 import { GetNotesFilterDto } from "./dto/get-notes-filter.dto";
 import { NotesService } from "./notes.service";
@@ -29,14 +30,16 @@ export class NotesController {
 
   @Get()
   getNotes(
-    @Query() filterDto: GetNotesFilterDto,
+    @Query()
+    filterDto: GetNotesFilterDto,
     @GetUser() user: User,
-  ): Promise<Note[]> {
+  ): Promise<ApiResponse<Note>> {
     this.logger.verbose(
       `User ${user.email} retrieving all notes. Filters: ${JSON.stringify(
         filterDto,
       )}`,
     );
+
     return this.notesService.getNotes(filterDto, user);
   }
 

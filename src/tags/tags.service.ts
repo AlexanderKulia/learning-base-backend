@@ -1,15 +1,26 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+} from "@nestjs/common";
 import { Tag, User } from "@prisma/client";
 import { PrismaService } from "../prisma.service";
+import { ApiResponse } from "../types";
 import { CreateTagDto } from "./dto/create-tag.dto";
 import { GetTagsFilterDto } from "./dto/get-gets-flter.dto";
 
 @Injectable()
 export class TagsService {
+  private readonly logger = new Logger(TagsService.name);
+
   constructor(private prisma: PrismaService) {}
 
-  async getTags(filterDto: GetTagsFilterDto, user: User): Promise<Tag[]> {
-    const { search } = filterDto;
+  async getTags(
+    filterDto: GetTagsFilterDto,
+    user: User,
+  ): Promise<ApiResponse<Tag>> {
+    const { search, page, perPage } = filterDto;
     const where = search
       ? {
           user,
@@ -17,14 +28,35 @@ export class TagsService {
         }
       : { user };
 
-    return await this.prisma.tag.findMany({
-      where,
-      include: {
-        _count: {
-          select: { notes: true },
+    try {
+      const itemCount = await this.prisma.tag.count({ where });
+      const data = await this.prisma.tag.findMany({
+        where,
+        skip: (page - 1) * perPage,
+        take: perPage,
+        include: {
+          _count: {
+            select: { notes: true },
+          },
         },
-      },
-    });
+      });
+
+      return {
+        data,
+        meta: {
+          itemCount,
+          pageCount: Math.ceil(itemCount / perPage),
+        },
+      };
+    } catch (error) {
+      this.logger.error(
+        `Failed to get tags for user "${user.email}". Filters: ${JSON.stringify(
+          filterDto,
+        )}`,
+        error.stack,
+      );
+      throw new InternalServerErrorException();
+    }
   }
 
   async getTagById(id: number): Promise<Tag> {
