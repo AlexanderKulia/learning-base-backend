@@ -4,7 +4,7 @@ import {
   Logger,
   NotFoundException,
 } from "@nestjs/common";
-import { Tag, User } from "@prisma/client";
+import { Prisma, Tag, User } from "@prisma/client";
 import { PrismaService } from "../prisma.service";
 import { ApiResponse } from "../types";
 import { CreateTagDto } from "./dto/create-tag.dto";
@@ -20,19 +20,27 @@ export class TagsService {
     filterDto: GetTagsFilterDto,
     user: User,
   ): Promise<ApiResponse<Tag>> {
-    const { search, page, perPage } = filterDto;
-    const where = search
-      ? {
-          user,
-          title: { contains: search },
-        }
-      : { user };
+    const { search, page, perPage, sortBy, sortOrder } = filterDto;
+
+    const where: Prisma.TagWhereInput = { user };
+    if (search) {
+      where.title = { contains: search };
+    }
+
+    const orderBy: Prisma.TagOrderByWithRelationInput = {};
+    if (!sortBy || !sortOrder) orderBy.updatedAt = "desc";
+    if (sortBy === "noteCount") {
+      orderBy.notes = { _count: sortOrder };
+    } else {
+      orderBy[sortBy] = sortOrder;
+    }
 
     try {
       const itemCount = await this.prisma.tag.count({ where });
       const data = await this.prisma.tag.findMany({
         where,
         skip: (page - 1) * perPage,
+        orderBy,
         take: perPage,
         include: {
           _count: {
