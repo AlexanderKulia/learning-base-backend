@@ -44,13 +44,13 @@ describe("NotesController", () => {
 
   describe("getNotes", () => {
     it("should return an array of notes", async () => {
-      jest
-        .spyOn(notesService, "getNotes")
-        .mockImplementation(async () => [mockNote]);
+      jest.spyOn(notesService, "getNotes").mockImplementation(async () => {
+        return { data: [mockNote], meta: null };
+      });
 
       expect(
         await notesController.getNotes(mockFilterDto, mockUser),
-      ).toStrictEqual([mockNote]);
+      ).toStrictEqual({ data: [mockNote], meta: null });
     });
   });
 });
