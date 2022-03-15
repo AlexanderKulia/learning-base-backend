@@ -34,7 +34,7 @@ export class AuthService {
       return { message: "User created successfully" };
     } catch (error) {
       // duplicate email
-      if (error.code === "23505") {
+      if (error.code === "P2002") {
         throw new ConflictException("Email already exists");
       } else {
         throw new InternalServerErrorException();
