@@ -1,4 +1,4 @@
-import { ValidationPipe } from "@nestjs/common";
+import { INestApplication, ValidationPipe } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { NestFactory } from "@nestjs/core";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
@@ -8,14 +8,21 @@ import { AppModule } from "./app.module";
 import { PrismaService } from "./prisma.service";
 
 async function bootstrap() {
-  const httpsOptions = {
-    key: fs.readFileSync("/etc/letsencrypt/live/kaaprojects.com/privkey.pem"),
-    cert: fs.readFileSync(
-      "/etc/letsencrypt/live/kaaprojects.com/fullchain.pem",
-    ),
-  };
+  let app: INestApplication;
 
-  const app = await NestFactory.create(AppModule, { httpsOptions });
+  if (process.env.STAGE === "prod") {
+    const httpsOptions = {
+      key: fs.readFileSync("/etc/letsencrypt/live/kaaprojects.com/privkey.pem"),
+      cert: fs.readFileSync(
+        "/etc/letsencrypt/live/kaaprojects.com/fullchain.pem",
+      ),
+    };
+
+    app = await NestFactory.create(AppModule, { httpsOptions });
+  } else {
+    app = await NestFactory.create(AppModule);
+  }
+
   const configService = app.get(ConfigService);
 
   app.enableCors({
