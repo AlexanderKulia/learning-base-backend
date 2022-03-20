@@ -3,11 +3,19 @@ import { ConfigService } from "@nestjs/config";
 import { NestFactory } from "@nestjs/core";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import cookieParser from "cookie-parser";
+import fs from "fs";
 import { AppModule } from "./app.module";
 import { PrismaService } from "./prisma.service";
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const httpsOptions = {
+    key: fs.readFileSync("/etc/letsencrypt/live/kaaprojects.com/privkey.pem"),
+    cert: fs.readFileSync(
+      "/etc/letsencrypt/live/kaaprojects.com/fullchain.pem",
+    ),
+  };
+
+  const app = await NestFactory.create(AppModule, { httpsOptions });
   const configService = app.get(ConfigService);
 
   app.enableCors({
