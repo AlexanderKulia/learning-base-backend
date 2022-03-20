@@ -8,20 +8,7 @@ import { AppModule } from "./app.module";
 import { PrismaService } from "./prisma.service";
 
 async function bootstrap() {
-  let app: INestApplication;
-
-  if (process.env.STAGE === "prod") {
-    const httpsOptions = {
-      key: fs.readFileSync("/etc/letsencrypt/live/kaaprojects.com/privkey.pem"),
-      cert: fs.readFileSync(
-        "/etc/letsencrypt/live/kaaprojects.com/fullchain.pem",
-      ),
-    };
-
-    app = await NestFactory.create(AppModule, { httpsOptions });
-  } else {
-    app = await NestFactory.create(AppModule);
-  }
+  const app = await NestFactory.create(AppModule);
 
   const configService = app.get(ConfigService);
 
