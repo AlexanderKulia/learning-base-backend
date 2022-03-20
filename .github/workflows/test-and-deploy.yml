@@ -32,5 +32,5 @@ jobs:
             cd ${{ secrets.DEPLOY_PATH }}
             git checkout main
             git pull origin main
-            pm2 restart ecosystem.config.js
+            pm2 reload ecosystem.config.js
             echo 'Deployed successfully'
