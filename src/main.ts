@@ -1,9 +1,8 @@
-import { INestApplication, ValidationPipe } from "@nestjs/common";
+import { ValidationPipe } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { NestFactory } from "@nestjs/core";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import cookieParser from "cookie-parser";
-import fs from "fs";
 import { AppModule } from "./app.module";
 import { PrismaService } from "./prisma.service";
 
