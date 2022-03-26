@@ -5,3 +5,7 @@ export interface ApiResponse<T> {
     pageCount: number;
   };
 }
+
+export interface GenericResponse {
+  message: string;
+}

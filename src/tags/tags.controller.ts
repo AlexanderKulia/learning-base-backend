@@ -17,14 +17,14 @@ import { Tag, User } from "@prisma/client";
 import { GetUser } from "../auth/get-user.decorator";
 import { ApiResponse } from "../types";
 import { CreateTagDto } from "./dto/create-tag.dto";
-import { GetTagsFilterDto } from "./dto/get-gets-flter.dto";
+import { GetTagsFilterDto } from "./dto/get-tags-flter.dto";
 import { TagsService } from "./tags.service";
 
 @ApiBearerAuth()
 @Controller("tags")
 @UseGuards(AuthGuard())
 export class TagsController {
-  private readonly logger = new Logger();
+  private readonly logger = new Logger(TagsController.name);
 
   constructor(private tagsService: TagsService) {}
 
@@ -51,7 +51,10 @@ export class TagsController {
   }
 
   @Post()
-  createTag(@Body() createTagDto: CreateTagDto, @GetUser() user: User) {
+  createTag(
+    @Body() createTagDto: CreateTagDto,
+    @GetUser() user: User,
+  ): Promise<Tag> {
     this.logger.verbose(
       `User ${user.email} creating a new tag. Data ${JSON.stringify(
         createTagDto,

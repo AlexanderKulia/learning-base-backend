@@ -104,7 +104,11 @@ export class NotesService {
     }
   }
 
-  async updateNote(id: number, updateNoteDto: CreateNoteDto, user: User) {
+  async updateNote(
+    id: number,
+    updateNoteDto: CreateNoteDto,
+    user: User,
+  ): Promise<Note> {
     const found = await this.prisma.note.findUnique({
       where: { id },
       include: { tags: true },

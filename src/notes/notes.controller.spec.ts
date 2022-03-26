@@ -25,6 +25,7 @@ export const mockUser: User = {
   email: "",
   password: "",
   tokenVersion: 0,
+  emailVerified: false,
 };
 
 describe("NotesController", () => {

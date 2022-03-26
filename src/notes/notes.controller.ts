@@ -43,7 +43,7 @@ export class NotesController {
     return this.notesService.getNotes(filterDto, user);
   }
 
-  @Get("/:id")
+  @Get(":id")
   getNoteById(
     @Param("id", ParseIntPipe) id: number,
     @GetUser() user: User,
@@ -65,7 +65,7 @@ export class NotesController {
     return this.notesService.createNote(createNoteDto, user);
   }
 
-  @Delete("/:id")
+  @Delete(":id")
   deleteNote(
     @Param("id", ParseIntPipe) id: number,
     @GetUser() user: User,

@@ -8,7 +8,7 @@ import { Prisma, Tag, User } from "@prisma/client";
 import { PrismaService } from "../prisma.service";
 import { ApiResponse } from "../types";
 import { CreateTagDto } from "./dto/create-tag.dto";
-import { GetTagsFilterDto } from "./dto/get-gets-flter.dto";
+import { GetTagsFilterDto } from "./dto/get-tags-flter.dto";
 
 @Injectable()
 export class TagsService {
@@ -91,7 +91,7 @@ export class TagsService {
     }
   }
 
-  async updateTag(id: number, updateTagDto: CreateTagDto) {
+  async updateTag(id: number, updateTagDto: CreateTagDto): Promise<Tag> {
     const { title } = updateTagDto;
     return await this.prisma.tag.update({ where: { id }, data: { title } });
   }

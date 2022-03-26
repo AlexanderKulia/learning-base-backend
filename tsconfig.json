@@ -12,6 +12,5 @@
     "baseUrl": "./",
     "incremental": true,
     "esModuleInterop": true
-  },
-  "references": [{ "path": "../shared" }]
+  }
 }
