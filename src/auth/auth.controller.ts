@@ -13,6 +13,7 @@ import { Request, Response } from "express";
 import { GenericResponse } from "../types";
 import { AuthService } from "./auth.service";
 import { AuthCredentialsDto } from "./dto/auth-credentials.dto";
+import { ChangePasswordDto } from "./dto/change-password.dto";
 import { ForgotPasswordDto } from "./dto/forgot-password.dto";
 import { ResetPasswordDto } from "./dto/reset-password.dto";
 import { VerifyEmailDto } from "./dto/verify-email.dto";
@@ -103,8 +104,17 @@ export class AuthController {
   }
 
   @UseGuards(AuthGuard())
-  @Post("send_verification")
+  @Get("send_verification")
   sendVerification(@GetUser() user: User): Promise<GenericResponse> {
     return this.authService.sendVerification(user);
+  }
+
+  @UseGuards(AuthGuard())
+  @Post("change_password")
+  changePassword(
+    @GetUser() user: User,
+    @Body() changePasswordDto: ChangePasswordDto,
+  ): Promise<GenericResponse> {
+    return this.authService.changePassword(user, changePasswordDto);
   }
 }

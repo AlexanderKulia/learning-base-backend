@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  ForbiddenException,
   HttpException,
   HttpStatus,
   Injectable,
@@ -16,6 +17,7 @@ import { EmailService } from "../email/email.service";
 import { PrismaService } from "../prisma.service";
 import { GenericResponse } from "../types";
 import { AuthCredentialsDto } from "./dto/auth-credentials.dto";
+import { ChangePasswordDto } from "./dto/change-password.dto";
 import { ForgotPasswordDto } from "./dto/forgot-password.dto";
 import { ResetPasswordDto } from "./dto/reset-password.dto";
 import { VerifyEmailDto } from "./dto/verify-email.dto";
@@ -350,5 +352,26 @@ export class AuthService {
     const verificationUrl = await this.generateEmailVerificationUrl(email);
     await this.emailService.sendEmailVerification(email, verificationUrl);
     return { message: "Verification email has been sent successfully" };
+  }
+
+  async changePassword(
+    user: User,
+    changePasswordDto: ChangePasswordDto,
+  ): Promise<GenericResponse> {
+    const { oldPassword, newPassword } = changePasswordDto;
+    const isValid = user && (await bcrypt.compare(oldPassword, user.password));
+    if (!isValid) throw new ForbiddenException("Incorrect password");
+
+    const salt = await bcrypt.genSalt();
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    await this.prisma.user.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        password: hashedPassword,
+      },
+    });
+    return { message: "Password updated successfully" };
   }
 }
