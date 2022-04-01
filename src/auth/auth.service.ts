@@ -372,6 +372,7 @@ export class AuthService {
         password: hashedPassword,
       },
     });
+    await this.emailService.sendPasswordResetConfirmation(user.email);
     return { message: "Password updated successfully" };
   }
 }
