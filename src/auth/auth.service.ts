@@ -16,10 +16,11 @@ import crypto from "crypto";
 import { EmailService } from "../email/email.service";
 import { PrismaService } from "../prisma.service";
 import { GenericResponse } from "../types";
-import { AuthCredentialsDto } from "./dto/auth-credentials.dto";
 import { ChangePasswordDto } from "./dto/change-password.dto";
 import { ForgotPasswordDto } from "./dto/forgot-password.dto";
 import { ResetPasswordDto } from "./dto/reset-password.dto";
+import { SignInDto } from "./dto/sign-in.dto";
+import { SignUpDto } from "./dto/sign-up.dto";
 import { VerifyEmailDto } from "./dto/verify-email.dto";
 import { VerifyPasswordResetTokenDto } from "./dto/verify-password-reset-token.dto";
 import { AccessTokenPayload, RefreshTokenPayload } from "./jwt.interface";
@@ -35,9 +36,7 @@ export class AuthService {
     private emailService: EmailService,
   ) {}
 
-  async signUp(
-    authCredentialsDto: AuthCredentialsDto,
-  ): Promise<GenericResponse> {
+  async signUp(authCredentialsDto: SignUpDto): Promise<GenericResponse> {
     const { email, password } = authCredentialsDto;
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(password, salt);
@@ -60,7 +59,7 @@ export class AuthService {
   }
 
   async signIn(
-    authCredentialsDto: AuthCredentialsDto,
+    authCredentialsDto: SignInDto,
   ): Promise<{ accessToken: string; refreshToken: string }> {
     const { email, password } = authCredentialsDto;
     const user = await this.prisma.user.findUnique({ where: { email } });

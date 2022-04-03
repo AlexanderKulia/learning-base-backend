@@ -12,10 +12,11 @@ import { User } from "@prisma/client";
 import { Request, Response } from "express";
 import { GenericResponse } from "../types";
 import { AuthService } from "./auth.service";
-import { AuthCredentialsDto } from "./dto/auth-credentials.dto";
 import { ChangePasswordDto } from "./dto/change-password.dto";
 import { ForgotPasswordDto } from "./dto/forgot-password.dto";
 import { ResetPasswordDto } from "./dto/reset-password.dto";
+import { SignInDto } from "./dto/sign-in.dto";
+import { SignUpDto } from "./dto/sign-up.dto";
 import { VerifyEmailDto } from "./dto/verify-email.dto";
 import { VerifyPasswordResetTokenDto } from "./dto/verify-password-reset-token.dto";
 import { GetUser } from "./get-user.decorator";
@@ -25,19 +26,17 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post("signup")
-  signUp(
-    @Body() authCredentialsDto: AuthCredentialsDto,
-  ): Promise<GenericResponse> {
-    return this.authService.signUp(authCredentialsDto);
+  signUp(@Body() signUpDto: SignUpDto): Promise<GenericResponse> {
+    return this.authService.signUp(signUpDto);
   }
 
   @Post("signin")
   async signIn(
-    @Body() authCredentialsDto: AuthCredentialsDto,
+    @Body() signInDto: SignInDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<{ accessToken: string }> {
     const { accessToken, refreshToken } = await this.authService.signIn(
-      authCredentialsDto,
+      signInDto,
     );
     res.cookie("jid", refreshToken, { httpOnly: true });
 
